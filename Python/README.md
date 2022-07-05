@@ -56,7 +56,7 @@ answer = 3600/difference.seconds * distance  # here is the equation we create ab
 answer = round(answer, 2)
 ```
 Seeing this code, you may not have encountered Python's `datetime` library before and so functions like `strptime()` are a bit confusing.
-THe `datetime` library is an easy way to handle dates and times in our code. 
+The `datetime` library is an easy way to handle dates and times in our code. 
 It means we don't have to handle subtracting "12:34:23" - "11:57:58" on our own, instead Python does it for us!
 
 
@@ -67,8 +67,91 @@ for example XX77 787. Produce a part of the program that checks whether a number
 randomised number plates and times. You will then use the code you’ve already written to process this list to determine who is breaking the speed limit (70mph) and who
 has invalid number plates.
 
-### Extension 1
+### Extension 1 (solution_advanced.py)
+In this part, we add an extra input where the user can enter the number plate of the vehicle. 
+The program will then check to ensure the number plate follows the correct pattern.
+The correct pattern is: two letter, two numbers, and three letters after.
+<br>
+
+For the program below we import the code from `solution.py` so the program runs exactly the same by with additional input for the number plate as shown below.
+This code is relatively simple as all we are doing is checking an input for various properties.
+```python
+# Does all of our calculations for us
+import solution
+
+# Get number plate from user and removes any spaces that may be in it
+number_plate = input("Please enter the number plate of the vehicle: ")
+number_plate = number_plate.replace(" ", "")
+
+# Display car speed from solution.py
+print(f"The car was travelling {solution.answer} mph")
+
+# Validate the length of the number plate is correct
+if len(number_plate) != 7:
+    print(f"Vehicle number plate is not correct length!")
+
+# Here we check if the number plate follows the pattern: 2 letters, 2 numbers, and 3 letters after.
+# NOTE: isalpha() returns true if string is a letter, and isdigit() returns true if string is a number.
+# NOTE: backslash \ can be used to make a single line multiple lines -- this helps with readability
+elif number_plate[0].isalpha() and \
+        number_plate[1].isalpha() and \
+        number_plate[2].isdigit() and \
+        number_plate[3].isdigit() and \
+        number_plate[4].isalpha() and \
+        number_plate[5].isalpha() and \
+        number_plate[6].isalpha():
+    print(f"Vehicle number plate \"{number_plate}\" is valid!")
+else: 
+    print(f"Vehicle number plate \"{number_plate}\" is invalid!")
+```
+
+### Extension 2 (solution_advanced2.py)
+In this extension, we can split into two parts. 
+First we must generate a series of tests with randomised data, and second, we must process our own tests to see who is speeding.
+<br>
+Let's begin with generating the tests. 
+For this we use a fairly advanced Python concept called a `generator`.
+Essentially our `generate_test_entries` will return a unique entry everytime we loop.
+The same result can be make by calling the function every on every loop through.
+```python
+import datetime
+import random
+
+# Constant stores all the letters and numbers for our number plate.
+alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 
-### Extension 2
+# This function is a generator, it produces exactly as many generated entries as we want.
+# A generator is useful as we can use it in a for loop which we do below.
+def generate_test_entries(entry_count):
 
+    # entry_count is the number of entries we want out of the generator
+    while entry_count >= 0:
+        # We generate a random pattern by randomly choosing 8 characters from the alphabet list above.
+        number_plate = "".join(random.choice(alphabet) for _ in range(0, 8))
+
+        # The start time is the current time taken from the user's computer
+        start_time = datetime.datetime.now()
+        # The end time is the start time plus and random integers between 0 and 120
+        end_time = start_time + datetime.timedelta(
+            minutes=random.randrange(120),
+            seconds=random.randrange(120)
+        )
+        # Generate random distance between 10 and 300
+        distance = random.randint(10, 300)
+
+        # We yield our variables, decrease the entry count, then we continue to loop and yield until entry count is 0
+        yield number_plate, start_time.time(), end_time.time(), distance
+        entry_count = entry_count - 1
+
+
+# Here we use the generator function above to generate 100 random entries
+# NOTE: you can see some generated entries in test_data!
+entries = []
+for plate, start, end, distance in generate_test_entries(100):
+    entries.append(f"{plate} | {start} | {end} | {distance}\n")
+
+# Finally we write this into the test_data file.
+with open("test_data", "w") as f:
+    f.writelines(entries)
+```
